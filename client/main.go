@@ -14,9 +14,10 @@ import (
 
 	grpcquic "github.com/coremedic/grpc-quic"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-func init_the_client(host string, passcode string) (pb.Calling_VoIPClient, error) {
+func init_the_client_v3(host string, passcode string) (pb.Calling_VoIPClient, error) {
 	passcodes := []string{}
 	passcodes = append(passcodes, passcode)
 	tlsConfig := &tls.Config{
@@ -42,9 +43,26 @@ func init_the_client(host string, passcode string) (pb.Calling_VoIPClient, error
 	}
 	return client, nil
 }
+func init_the_client_v2(host string) (pb.Calling_VoIPClient, error) {
+	grpcOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+	conn, err := grpc.NewClient(host, grpcOpts...)
+	if err != nil {
+		return nil, err
+	}
+	client, err := pb.NewCallingClient(conn).VoIP(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
 func main() {
 	log.Println("connecting to the server....")
-	client, err := init_the_client("localhost:8080", "caller")
+	// client, err := init_the_client_v3("192.168.1.2:8080", "caller")
+	client, err := init_the_client_v2("192.168.1.2:8080")
+
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -84,12 +102,7 @@ func main() {
 		// for data:= range
 	}()
 	go func() {
-		// data, err := client.Recv()
-		// if err != nil {
-		// 	stop()
-		// 	return
-		// }
-		// data_chan <- data.Msg.Chunk
+
 		for {
 			select {
 			case _, ok := <-ctx.Done():

@@ -15,11 +15,11 @@ import (
 
 func main() {
 	input := make(chan *types.Chunk, 1024)
-	serv := serv.New("localhost", 8080, input)
+	serv := serv.New("", 8080, input)
 	helper := grpc.NewServer()
 	pb.RegisterCallingServer(helper, serv)
-	lis,err:= networking.NewConnHTTP3("caller",fmt.Sprintf("%v", serv))
-	// lis, err := networking.NewConnHTTP2(fmt.Sprintf("%v", serv))
+	// lis, err := networking.NewConnHTTP3("caller", fmt.Sprintf("%v", serv))
+	lis, err := networking.NewConnHTTP2(fmt.Sprintf("%v", serv))
 	if err != nil {
 		return
 	}

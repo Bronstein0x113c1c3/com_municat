@@ -60,8 +60,10 @@ func init_the_client_v2(host string, ctx context.Context) (pb.Calling_VoIPClient
 
 func main() {
 	log.Println("io done, initiating the signal....")
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stop()
+	ctx1, cancel1 := context.WithCancel(ctx)
+	defer cancel1()
 	log.Println("connecting to the server....")
 	client, err := init_the_client_v3("192.168.1.2:8080", "caller", ctx)
 	// client, err := init_the_client_v2("192.168.1.2:8080", ctx)
@@ -106,7 +108,7 @@ func main() {
 
 		for {
 			select {
-			case _, ok := <-ctx.Done():
+			case _, ok := <-ctx1.Done():
 				if !ok {
 					return
 				}

@@ -29,5 +29,6 @@ func (s *Serv) out(id xuuid.UUID, closed bool) {
 		log.Println("Deletion requested!!!")
 		return
 	}
+	
 	log.Printf("Released %v!!!", id.String())
 }

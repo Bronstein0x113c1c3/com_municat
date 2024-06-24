@@ -14,6 +14,7 @@ func receive(conn pb.Calling_VoIPServer, data_chan chan *types.Chunk, id uuid.UU
 	for {
 		data, err := conn.Recv()
 		if err != nil {
+			// log.Println("receiving side...")
 			return
 		}
 		c := &types.Chunk{

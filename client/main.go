@@ -59,6 +59,12 @@ func init_the_client_v2(host string, ctx context.Context) (pb.Calling_VoIPClient
 }
 
 func main() {
+	fmt.Print("if you want to continue, press your name, otherwise, let it blank: ")
+	var name string
+	fmt.Scanln(&name)
+	if name == "" {
+		return
+	}
 	log.Println("io done, initiating the signal....")
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stop()
@@ -89,9 +95,6 @@ func main() {
 	wg.Add(1)
 	log.Println("signal done, start processing....")
 
-	fmt.Print("your name?: ")
-	var name string
-	fmt.Scanln(&name)
 	fmt.Println("please press ctrl+c anytime you want to stop, please :)")
 	go input.Process()
 	go func() {

@@ -17,6 +17,15 @@ func receive(conn pb.Calling_VoIPServer, data_chan chan *types.Chunk, id uuid.UU
 			// log.Println("receiving side...")
 			return
 		}
+
+		//for testing...
+		/*
+			if the request is signal -> return the signal as successully for the test
+			else, just process the sound
+
+			cuz, these could do <=> the connection is initiated!!!!!
+		*/
+
 		c := &types.Chunk{
 			ID:    id,
 			Name:  data.GetName(),

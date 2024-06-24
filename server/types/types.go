@@ -10,3 +10,6 @@ type Chunk struct {
 
 type Conn chan *Chunk
 type T string
+
+// type
+const Passcode = "bonjour!!!!"

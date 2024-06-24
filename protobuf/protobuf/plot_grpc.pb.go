@@ -38,7 +38,7 @@ func (c *callingClient) VoIP(ctx context.Context, opts ...grpc.CallOption) (Call
 }
 
 type Calling_VoIPClient interface {
-	Send(*ClientMSG) error
+	Send(*ClientREQ) error
 	Recv() (*ServerRES, error)
 	grpc.ClientStream
 }
@@ -47,7 +47,7 @@ type callingVoIPClient struct {
 	grpc.ClientStream
 }
 
-func (x *callingVoIPClient) Send(m *ClientMSG) error {
+func (x *callingVoIPClient) Send(m *ClientREQ) error {
 	return x.ClientStream.SendMsg(m)
 }
 
@@ -93,7 +93,7 @@ func _Calling_VoIP_Handler(srv interface{}, stream grpc.ServerStream) error {
 
 type Calling_VoIPServer interface {
 	Send(*ServerRES) error
-	Recv() (*ClientMSG, error)
+	Recv() (*ClientREQ, error)
 	grpc.ServerStream
 }
 
@@ -105,8 +105,8 @@ func (x *callingVoIPServer) Send(m *ServerRES) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *callingVoIPServer) Recv() (*ClientMSG, error) {
-	m := new(ClientMSG)
+func (x *callingVoIPServer) Recv() (*ClientREQ, error) {
+	m := new(ClientREQ)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}

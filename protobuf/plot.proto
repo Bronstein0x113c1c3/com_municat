@@ -6,11 +6,25 @@ message ClientMSG {
     bytes chunk = 1;
     string name = 2;
 }
-message ServerRES{
+message ClientSignal{}
+message ClientREQ{
+    oneof request{
+        ClientMSG message =1;
+        ClientSignal signal =2;
+    }
+}
+message ServerMSG{
     ClientMSG msg = 1;
     string id = 2;    
 }
+message ServerSignal{}
+message ServerRES{
+    oneof response{
+        ServerMSG message =1;
+        ServerSignal signal =2;
+    }
+}
 
 service Calling {
-    rpc VoIP (stream ClientMSG) returns (stream ServerRES);
+    rpc VoIP (stream ClientREQ) returns (stream ServerRES);
 }

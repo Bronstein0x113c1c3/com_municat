@@ -33,6 +33,7 @@ func ChannelFinding(s *serv.Serv) grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		id, err := s.In()
 		if err != nil {
+			<-ConnLimit
 			return status.Error(codes.NotFound, "slot not found...")
 		}
 		log.Printf("slot %v is opened!!!", id)

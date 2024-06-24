@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func init_the_client_v3(host string, passcode string) (pb.Calling_VoIPClient, error) {
+func init_the_client_v3(host string, passcode string, ctx context.Context) (pb.Calling_VoIPClient, error) {
 	passcodes := []string{}
 	passcodes = append(passcodes, passcode)
 	tlsConfig := &tls.Config{
@@ -37,13 +37,13 @@ func init_the_client_v3(host string, passcode string) (pb.Calling_VoIPClient, er
 	if err != nil {
 		return nil, err
 	}
-	client, err := pb.NewCallingClient(conn).VoIP(context.Background())
+	client, err := pb.NewCallingClient(conn).VoIP(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return client, nil
 }
-func init_the_client_v2(host string) (pb.Calling_VoIPClient, error) {
+func init_the_client_v2(host string, ctx context.Context) (pb.Calling_VoIPClient, error) {
 	grpcOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
@@ -51,7 +51,7 @@ func init_the_client_v2(host string) (pb.Calling_VoIPClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	client, err := pb.NewCallingClient(conn).VoIP(context.Background())
+	client, err := pb.NewCallingClient(conn).VoIP(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -59,9 +59,12 @@ func init_the_client_v2(host string) (pb.Calling_VoIPClient, error) {
 }
 
 func main() {
+	log.Println("io done, initiating the signal....")
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 	log.Println("connecting to the server....")
-	// client, err := init_the_client_v3("192.168.1.2:8080", "caller")
-	client, err := init_the_client_v2("192.168.1.2:8080")
+	client, err := init_the_client_v3("192.168.1.2:8080", "caller", ctx)
+	// client, err := init_the_client_v2("192.168.1.2:8080", ctx)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -80,16 +83,14 @@ func main() {
 	if err != nil {
 		return
 	}
-	log.Println("io done, initiating the signal....")
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
+
 	wg.Add(1)
 	log.Println("signal done, start processing....")
 
-	log.Print("Your name?: ")
+	fmt.Print("your name?: ")
 	var name string
 	fmt.Scanln(&name)
-
+	fmt.Println("please press ctrl+c anytime you want to stop, please :)")
 	go input.Process()
 	go func() {
 		data_chan := input.GetChannel()
@@ -121,6 +122,7 @@ func main() {
 	}()
 	go output.Process()
 	<-ctx.Done()
+	stop()
 	go input.Close()
 	go output.Close()
 	defer wg.Wait()

@@ -10,7 +10,7 @@ import (
 
 //this go file is for controlling the Output channel for in/out
 
-func (s *Serv) in() (xuuid.UUID, error) {
+func (s *Serv) In() (xuuid.UUID, error) {
 
 	id := xuuid.NewV4()
 	data := make(types.Conn, 1000)
@@ -29,6 +29,6 @@ func (s *Serv) out(id xuuid.UUID, closed bool) {
 		log.Println("Deletion requested!!!")
 		return
 	}
-	
+
 	log.Printf("Released %v!!!", id.String())
 }

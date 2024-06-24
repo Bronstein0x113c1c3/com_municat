@@ -5,15 +5,17 @@ import (
 	pb "server/protobuf"
 	"server/types"
 
+	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func (s *Serv) VoIP(conn pb.Calling_VoIPServer) error {
-	id, err := s.in()
-	if err != nil {
-		return status.Error(codes.Internal, "create got problem...")
-	}
+	// id, err := s.In()
+	// if err != nil {
+	// 	return status.Error(codes.Internal, "create got problem...")
+	// }
+	id := conn.Context().Value(types.T("channel")).(uuid.UUID)
 	res, ok := s.Output.Load(id)
 	if !ok {
 		return status.Error(codes.Internal, "losing channel...")

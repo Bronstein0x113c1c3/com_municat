@@ -9,3 +9,4 @@ type Chunk struct {
 }
 
 type Conn chan *Chunk
+type T string

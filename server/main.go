@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"server/interceptor"
 	"server/networking"
 	pb "server/protobuf"
 	"server/serv"
@@ -22,6 +23,8 @@ func control(serv *serv.Serv, ctx context.Context) {
 		serv.Output.Range(func(key, value any) bool {
 			channel := *value.(*types.Conn)
 			close(channel)
+
+			defer log.Printf("%v is deleted!!! \n", key.(uuid.UUID).String())
 			defer serv.Output.Delete(key)
 			// log.Printf("We got data from: %v, %v", id, <-channel)
 			return true
@@ -44,6 +47,7 @@ func control(serv *serv.Serv, ctx context.Context) {
 			channel := *res.(*types.Conn)
 			close(channel)
 			serv.Output.Delete(x)
+			<-interceptor.ConnLimit
 			continue
 		case data, ok := <-serv.Input:
 			if !ok {
@@ -63,14 +67,23 @@ func control(serv *serv.Serv, ctx context.Context) {
 	}
 }
 func main() {
+	defer log.Println("turn off successfully!!!")
+	log.Println("initiating the server....")
 	input := make(chan *types.Chunk, 1024)
 	serv := serv.New("", 8080, input)
-	defer close(serv.Input)
-	helper := grpc.NewServer()
+	defer func() {
+		close(serv.Input)
+		close(serv.Incoming)
+		close(serv.Leaving)
+	}()
+	helper := grpc.NewServer(grpc.ChainStreamInterceptor(interceptor.Limiting, interceptor.ChannelFinding(serv)))
 	pb.RegisterCallingServer(helper, serv)
 	lis, err := networking.NewConnHTTP3("caller", fmt.Sprintf("%v", serv))
+	if err != nil {
+		log.Printf("server initation got error: %v \n", err)
+	}
 	// lis, err := networking.NewConnHTTP2(fmt.Sprintf("%v", serv))
-
+	log.Println("connection initiated, creating signal!!")
 	//create signal
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stop()
@@ -79,7 +92,7 @@ func main() {
 	if err != nil {
 		return
 	}
-
+	log.Println("server initiated, happy serving! wait for turning off!!!")
 	go control(serv, ctx1)
 	go helper.Serve(lis)
 

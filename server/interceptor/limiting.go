@@ -10,13 +10,17 @@ import (
 )
 
 var ConnLimit chan struct{}
+var MaxConn = 10
 
 func init() {
-	ConnLimit = make(chan struct{}, 10)
+	ConnLimit = make(chan struct{}, MaxConn)
 }
 
 // func(srv interface{}, ss ServerStream, info *StreamServerInfo,handler StreamHandler) error
 func Limiting(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	// passcode := ss.Context().Value("passcode").(string)
+	// log.Println(passcode)
+
 	p, ok := peer.FromContext(ss.Context())
 	log.Printf("%v is called... \n", info.FullMethod)
 	if !ok {
@@ -24,7 +28,7 @@ func Limiting(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo
 	}
 	log.Printf("%v wants to connect....: ", p.Addr.String())
 
-	a := 10 - len(ConnLimit)
+	a := MaxConn - len(ConnLimit)
 	if a <= 0 {
 		// log.Printf("remaining %v connections... \n", a)
 		log.Println("Out of slots")

@@ -76,7 +76,7 @@ func main() {
 		close(serv.Incoming)
 		close(serv.Leaving)
 	}()
-	helper := grpc.NewServer(grpc.ChainStreamInterceptor(interceptor.Limiting, interceptor.ChannelFinding(serv)))
+	helper := grpc.NewServer(grpc.ChainStreamInterceptor(interceptor.Limiting, interceptor.AuthenClone, interceptor.ChannelFinding(serv)))
 	pb.RegisterCallingServer(helper, serv)
 	lis, err := networking.NewConnHTTP3("caller", fmt.Sprintf("%v", serv))
 	if err != nil {

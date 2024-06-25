@@ -3,6 +3,7 @@ package step
 import (
 	"client/control"
 	"client/input"
+	"client/networking"
 	"client/output"
 	pb "client/protobuf"
 	"client/transmitting"
@@ -61,4 +62,11 @@ func Serve(input *input.Input, output *output.Output, data_chan chan []byte, sig
 	go output.Process()
 	go control.Command(signal_chan, command_chan)
 	go control.Control(ctx2, command_chan, signal_chan, input, output, stop)
+}
+
+func InitClient(host string, ctx context.Context, passcode string, http3 bool) (pb.Calling_VoIPClient, error) {
+	if http3 {
+		return networking.InitV3(host, passcode, ctx)
+	}
+	return networking.InitV2(host, ctx)
 }

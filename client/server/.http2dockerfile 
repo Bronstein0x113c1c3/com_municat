@@ -1,0 +1,6 @@
+FROM ubuntu
+
+COPY http2 /bin
+WORKDIR /bin
+EXPOSE 8080
+CMD [ "http2" ]

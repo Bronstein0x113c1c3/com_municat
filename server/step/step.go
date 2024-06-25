@@ -20,14 +20,22 @@ func ServInit(host string, port int) *serv.Serv {
 	input := make(chan *types.Chunk, 1024)
 	return serv.New("", 8080, input)
 }
-func ConnInit(serv *serv.Serv) (*grpc.Server, net.Listener, error) {
+func ConnInit(serv *serv.Serv, http3 bool) (*grpc.Server, net.Listener, error) {
 	helper := grpc.NewServer(grpc.ChainStreamInterceptor(interceptor.Limiting, interceptor.AuthenClone, interceptor.ChannelFinding(serv)))
 	pb.RegisterCallingServer(helper, serv)
-	lis, err := networking.NewConnHTTP3("caller", fmt.Sprintf("%v", serv))
-	if err != nil {
-		return nil, nil, err
+	if http3 {
+		lis, err := networking.NewConnHTTP3("caller", fmt.Sprintf("%v", serv))
+		if err != nil {
+			return nil, nil, err
+		}
+		return helper, lis, nil
+	} else {
+		lis, err := networking.NewConnHTTP2(fmt.Sprintf("%v", serv))
+		if err != nil {
+			return nil, nil, err
+		}
+		return helper, lis, nil
 	}
-	return helper, lis, nil
 }
 
 func SignalInit() (context.Context, context.Context, context.CancelFunc, context.CancelFunc) {

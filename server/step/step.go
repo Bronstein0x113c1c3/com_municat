@@ -18,7 +18,7 @@ import (
 
 func ServInit(host string, port int) *serv.Serv {
 	input := make(chan *types.Chunk, 1024)
-	return serv.New("", 8080, input)
+	return serv.New("", port, input)
 }
 func ConnInit(serv *serv.Serv, http3 bool) (*grpc.Server, net.Listener, error) {
 	helper := grpc.NewServer(grpc.ChainStreamInterceptor(interceptor.Limiting, interceptor.AuthenClone, interceptor.ChannelFinding(serv)))

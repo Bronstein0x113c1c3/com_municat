@@ -50,7 +50,7 @@ func (i *Input) Process() {
 	// defer i.close(i.data_chan)
 	defer close(i.data_chan)
 	defer portaudio.Terminate()
-	defer i.stream.Stop()
+	// defer i.stream.Stop()
 	for {
 		i.stream.Read()
 		data := make([]byte, i.byte_len)

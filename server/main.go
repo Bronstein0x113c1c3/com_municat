@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-	fmt.Println("port: ")
+	fmt.Print("port: ")
 	var port int
 	fmt.Scanln(&port)
-	fmt.Println("use http3, if yes, press something contain y or Y, no otherwise: ")
+	fmt.Print("use http3, if yes, press something contain y or Y, no otherwise: ")
 	var http3 bool
 	var x string
 	fmt.Scanln(&x)

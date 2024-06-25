@@ -16,7 +16,7 @@ func main() {
 		close(serv.Leaving)
 	}()
 
-	helper, lis, err := step.ConnInit(serv, true)
+	helper, lis, err := step.ConnInit(serv, false)
 	if err != nil {
 		log.Fatalf("server initation got error: %v \n", err)
 

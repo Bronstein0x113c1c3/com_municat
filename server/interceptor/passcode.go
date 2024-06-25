@@ -1,10 +1,12 @@
 package interceptor
 
 import (
+	"log"
 	"server/types"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -26,10 +28,17 @@ func AuthenClone(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerI
 	// ConnLimit <- struct{}{}
 	// a = 10 - len(ConnLimit)
 	// log.Printf("remaining %v connections... \n", a)
-	passcode := ss.Context().Value(types.T("passcode")).(string)
-	if passcode == types.Passcode {
+	md, ok := metadata.FromIncomingContext(ss.Context())
+	if !ok {
+		log.Println("does not have any context....")
+	}
+	passcode := md.Get("passcode")[0]
+	if passcode != types.Passcode {
+		log.Println("wrong passcode!!!!")
+		<-ConnLimit
 		return status.Error(codes.Unauthenticated, "out of slots, cancelled!!!")
 	}
+	// log.Println(passcode)
 	handler(srv, ss)
 	return nil
 }

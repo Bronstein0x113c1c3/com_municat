@@ -12,4 +12,4 @@ type Conn chan *Chunk
 type T string
 
 // type
-const Passcode = "bonjour!!!!"
+const Passcode = "0x113c1c3!!!"

@@ -7,3 +7,5 @@ const (
 	DefaultFrameSize      = 480
 	DefaultOpusDataLength = 500
 )
+
+type T string

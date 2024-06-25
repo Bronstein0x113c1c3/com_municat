@@ -2,81 +2,58 @@ package main
 
 import (
 	"client/input"
+	"client/networking"
 	"client/output"
 	pb "client/protobuf"
 	"context"
-	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"sync"
 
-	grpcquic "github.com/coremedic/grpc-quic"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
-func init_the_client_v3(host string, passcode string, ctx context.Context) (pb.Calling_VoIPClient, error) {
-	passcodes := []string{}
-	passcodes = append(passcodes, passcode)
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
-		NextProtos:         passcodes,
-	}
-	creds := grpcquic.NewCredentials(tlsConfig)
-
-	// Connect to gRPC Service Server
-	dialer := grpcquic.NewQuicDialer(tlsConfig)
-	// grpc
-	grpcOpts := []grpc.DialOption{
-		grpc.WithContextDialer(dialer),
-		grpc.WithTransportCredentials(creds),
-	}
-	conn, err := grpc.NewClient(host, grpcOpts...)
-	if err != nil {
-		return nil, err
-	}
-	client, err := pb.NewCallingClient(conn).VoIP(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-func init_the_client_v2(host string, ctx context.Context) (pb.Calling_VoIPClient, error) {
-	grpcOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-	conn, err := grpc.NewClient(host, grpcOpts...)
-	if err != nil {
-		return nil, err
-	}
-	client, err := pb.NewCallingClient(conn).VoIP(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-
 func main() {
+
 	fmt.Print("if you want to continue, press your name, otherwise, let it blank: ")
 	var name string
 	fmt.Scanln(&name)
 	if name == "" {
 		return
 	}
+	fmt.Print("please press the passcode: ")
+	var passcode string
+	fmt.Scanln(&passcode)
 	log.Println("io done, initiating the signal....")
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	ctx_signal, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stop()
-	ctx1, cancel1 := context.WithCancel(ctx)
+
+	md_data := metadata.Pairs("passcode", passcode)
+	// ctx := context.WithValue(ctx_signal, "passcode", passcode)
+	ctx_client := metadata.NewOutgoingContext(ctx_signal, md_data)
+
+	ctx1, cancel1 := context.WithCancel(ctx_signal)
 	defer cancel1()
 	log.Println("connecting to the server....")
-	client, err := init_the_client_v3("192.168.1.2:8080", "caller", ctx)
+	client, err := networking.InitV3("192.168.1.2:8080", "caller", ctx_client)
 	// client, err := init_the_client_v2("192.168.1.2:8080", ctx)
-
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("error before connecting: %v \n", err)
 	}
+	//connection testing....
+
+	client.Send(&pb.ClientREQ{
+		Request: &pb.ClientREQ_Signal{
+			Signal: &pb.ClientSignal{},
+		},
+	})
+	_, err = client.Recv()
+	if err != nil {
+		log.Fatalf("error after connection: %v \n", err)
+	}
+
 	defer client.CloseSend()
 	wg := &sync.WaitGroup{}
 
@@ -100,9 +77,17 @@ func main() {
 	go func() {
 		data_chan := input.GetChannel()
 		for data := range data_chan {
-			client.Send(&pb.ClientMSG{
-				Chunk: data,
-				Name:  name,
+			// client.Send(&pb.ClientMSG{
+			// 	Chunk: data,
+			// 	Name:  name,
+			// })
+			client.Send(&pb.ClientREQ{
+				Request: &pb.ClientREQ_Message{
+					Message: &pb.ClientMSG{
+						Chunk: data,
+						Name:  name,
+					},
+				},
 			})
 		}
 		// for data:= range
@@ -111,12 +96,14 @@ func main() {
 
 		for {
 			select {
-			case _, ok := <-ctx1.Done():
-				if !ok {
-					return
-				}
+			case <-ctx1.Done():
+				return
 			default:
-				data, err := client.Recv()
+				segment, err := client.Recv()
+				if segment.GetSignal() != nil {
+					continue
+				}
+				data := segment.GetMessage()
 				if err != nil {
 					stop()
 					return
@@ -126,7 +113,7 @@ func main() {
 		}
 	}()
 	go output.Process()
-	<-ctx.Done()
+	<-ctx_signal.Done()
 	stop()
 	go input.Close()
 	go output.Close()

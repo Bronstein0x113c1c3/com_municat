@@ -22,8 +22,8 @@ func Send(data_chan chan []byte, client pb.Calling_VoIPClient, name string) {
 		})
 	}
 }
-func Receive(data_chan chan []byte, ctx context.Context, client pb.Calling_VoIPClient) {
-	
+func Receive(data_chan chan []byte, ctx context.Context, client pb.Calling_VoIPClient, stop context.CancelFunc) {
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -35,7 +35,7 @@ func Receive(data_chan chan []byte, ctx context.Context, client pb.Calling_VoIPC
 			}
 			data := segment.GetMessage()
 			if err != nil {
-				// stop()
+				stop()
 				return
 			}
 			data_chan <- data.Msg.Chunk

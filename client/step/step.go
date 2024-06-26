@@ -58,7 +58,7 @@ func Serve(input *input.Input, output *output.Output, data_chan chan []byte, sig
 	client pb.Calling_VoIPClient, ctx1, ctx2 context.Context, name string, stop context.CancelFunc) {
 	go input.Process()
 	go transmitting.Send(input.GetChannel(), client, name)
-	go transmitting.Receive(data_chan, ctx1, client)
+	go transmitting.Receive(data_chan, ctx1, client, stop)
 	go output.Process()
 	go control.Command(signal_chan, command_chan)
 	go control.Control(ctx2, command_chan, signal_chan, input, output, stop)

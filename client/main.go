@@ -58,7 +58,7 @@ func main() {
 		log.Fatalf("Error encountered when initializing I/O: %v \n", err)
 		// return
 	}
-	defer close(data_chan)
+	// defer close(data_chan)
 	log.Println("io done, start processing....")
 
 	fmt.Println("please press ctrl+c anytime you want to stop, please :)")

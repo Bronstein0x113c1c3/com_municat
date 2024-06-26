@@ -23,7 +23,7 @@ func Send(data_chan chan []byte, client pb.Calling_VoIPClient, name string) {
 	}
 }
 func Receive(data_chan chan []byte, ctx context.Context, client pb.Calling_VoIPClient, stop context.CancelFunc) {
-
+	defer close(data_chan)
 	for {
 		select {
 		case <-ctx.Done():

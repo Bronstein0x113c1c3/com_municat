@@ -54,6 +54,9 @@ func (i *Input) Process() {
 	for {
 		i.stream.Read()
 		data := make([]byte, i.byte_len)
+		// if len(i.buf) <= 0 {
+		// 	continue
+		// }
 		n, err := i.encoder.Encode(i.buf, data)
 		if err != nil {
 			return

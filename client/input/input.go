@@ -58,6 +58,9 @@ func (i *Input) Process() {
 		// 	continue
 		// }
 		n, err := i.encoder.Encode(i.buf, data)
+		// if n <= 0 {
+		// 	continue
+		// }
 		if err != nil {
 			return
 		}
